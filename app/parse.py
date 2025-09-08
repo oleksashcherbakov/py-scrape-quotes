@@ -4,6 +4,7 @@ import requests
 import csv
 import time
 from typing import List
+from urllib.parse import urljoin
 
 
 @dataclass
@@ -17,12 +18,14 @@ BASE_URL = "https://quotes.toscrape.com"
 
 
 def get_one_quote(quote_html: Tag) -> Quote:
-    text = quote_html.select_one(".text").text.strip()
-    author = quote_html.select_one(".author").text.strip()
+    text_el = quote_html.select_one(".text")
+    text = text_el.get_text(strip=True) if text_el else ""
+
+    author_el = quote_html.select_one(".author")
+    author = author_el.get_text(strip=True) if author_el else ""
 
     tags_container = quote_html.select_one(".tags")
-    tag_elements = tags_container.find_all("a", class_="tag")
-
+    tag_elements = tags_container.find_all("a", class_="tag") if tags_container else []
     tags_list = [element.get_text(strip=True) for element in tag_elements]
 
     return Quote(text, author, tags_list)
@@ -40,13 +43,18 @@ def parse_all_pages(base_url: str) -> List[Quote]:
 
             quotes_on_page = soup.select(".quote")
             for quote_html in quotes_on_page:
-                all_quotes.append(get_one_quote(quote_html))
+                try:
+                    all_quotes.append(get_one_quote(quote_html))
+                except Exception as e:
+                    print(f"Ошибка при парсинге цитаты: {e}")
+                    continue
 
             next_page = soup.select_one(".pager .next a")
             if not next_page:
                 break
 
-            current_url = base_url + next_page["href"]
+            next_page_href = next_page["href"]
+            current_url = urljoin(base_url, next_page_href)
 
             time.sleep(1)
 
