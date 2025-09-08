@@ -5,6 +5,7 @@ import csv
 import time
 from typing import List
 from urllib.parse import urljoin
+import json
 
 
 @dataclass
@@ -25,9 +26,7 @@ def get_one_quote(quote_html: Tag) -> Quote:
     author = author_el.get_text(strip=True) if author_el else ""
 
     tags_container = quote_html.select_one(".tags")
-    tag_elements = tags_container.find_all(
-        "a", class_="tag"
-    ) if tags_container else []
+    tag_elements = tags_container.find_all("a", class_="tag") if tags_container else []
     tags_list = [element.get_text(strip=True) for element in tag_elements]
 
     return Quote(text, author, tags_list)
@@ -72,9 +71,9 @@ def write_quotes_to_csv(path: str, quotes: List[Quote]) -> None:
         writer = csv.writer(csvfile)
         writer.writerow(["text", "author", "tags"])
 
-        writer.writerows(
-            (quote.text, quote.author, str(quote.tags)) for quote in quotes
-        )
+        for quote in quotes:
+            serialized_tags = json.dumps(quote.tags, ensure_ascii=False)
+            writer.writerow([quote.text, quote.author, serialized_tags])
 
 
 def main(output_csv_path: str) -> None:
