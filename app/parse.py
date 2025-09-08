@@ -25,7 +25,9 @@ def get_one_quote(quote_html: Tag) -> Quote:
     author = author_el.get_text(strip=True) if author_el else ""
 
     tags_container = quote_html.select_one(".tags")
-    tag_elements = tags_container.find_all("a", class_="tag") if tags_container else []
+    tag_elements = tags_container.find_all(
+        "a", class_="tag"
+    ) if tags_container else []
     tags_list = [element.get_text(strip=True) for element in tag_elements]
 
     return Quote(text, author, tags_list)
