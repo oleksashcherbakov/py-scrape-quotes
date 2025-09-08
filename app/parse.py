@@ -74,9 +74,9 @@ def write_quotes_to_csv(path: str, quotes: List[Quote]) -> None:
         writer = csv.writer(csvfile)
         writer.writerow(["text", "author", "tags"])
 
-        for quote in quotes:
-            serialized_tags = json.dumps(quote.tags, ensure_ascii=False)
-            writer.writerow([quote.text, quote.author, serialized_tags])
+        writer.writerows(
+            [(quote.text, quote.author, str(quote.tags)) for quote in quotes]
+        )
 
 
 def main(output_csv_path: str) -> None:
